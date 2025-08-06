@@ -8,7 +8,7 @@ import math
 class Segment_On_Clr:
 
     def __init__(self, a_1 = 56,a_2 = 66,a_3 = 41,a_4 = 23, b_1 = 0,b_2 = 8,b_3 = 33,b_4 = 23):
-        
+
         self.HLS = 0
         self.src = 0
 
@@ -23,7 +23,7 @@ class Segment_On_Clr:
         self.Sat_Low_R  = b_4
 
     def clr_segment(self,lower_range,upper_range):
-        
+
         # 2. Performing Color Segmentation on Given Range
         lower = np.array( [lower_range[0],lower_range[1] ,lower_range[2]] )
         upper = np.array( [upper_range[0]    ,255     ,255])
@@ -77,7 +77,7 @@ class Segment_On_Clr:
         self.MaskExtract()
 
     def in_hls(self,frame,mask=None,Rmv_Clr_From_Frame = False):
-        
+
         Seg_ClrReg_rmvd = None
 
         Frame_Mask = np.ones((frame.shape[0],frame.shape[1]),np.uint8)*255
@@ -86,9 +86,9 @@ class Segment_On_Clr:
             ROI_detected = frame
         else:
             ROI_detected = cv2.bitwise_and(frame,frame,mask = mask )
-        
+
         #cv2.imshow("ROI_detected",ROI_detected)
-        
+
         if (config.debugging and config.debugging_TrafficLights and config.debugging_TL_Config):
             cv2.createTrackbar("Hue_L","[TL_Config] mask2",self.Hue_Low_G,255,self.OnHueLowChange)
             cv2.createTrackbar("Hue_H","[TL_Config] mask2",self.Hue_High_G,255,self.OnHueHighChange)
@@ -114,7 +114,7 @@ class Segment_On_Clr:
         if Rmv_Clr_From_Frame:
             Seg_ClrReg_rmvd = cv2.bitwise_xor(Frame_Mask,frame_ROI_Bin)
             Seg_ClrReg_rmvd = cv2.bitwise_and(frame,frame,mask=Seg_ClrReg_rmvd)
-        else:    
+        else:
             Seg_ClrReg_rmvd= cv2.bitwise_xor(mask,frame_ROI_Bin)
             #cv2.imshow("Seg_ClrReg",Seg_ClrReg)
             #cv2.imshow("Seg_ClrReg_rmvd",Seg_ClrReg_rmvd)
@@ -126,7 +126,7 @@ class TL_States:
 
     def __init__(self):
         # Instance Variables
-        self.detected_circle = 0 
+        self.detected_circle = 0
         self.Traffic_State = "Unknown"
         self.prevTraffic_State = 0
 
@@ -156,14 +156,14 @@ class TL_States:
     def AreCircles_Intersecting(center,center_cmp,r1,r2):
         x1,y1=center
         x2,y2=center_cmp
-        distSq = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);  
-        radSumSq = (r1 + r2) * (r1 + r2);  
-        if (distSq == radSumSq): 
-            return 1 
-        elif (distSq > radSumSq): 
-            return -1 
-        else: 
-            return 0 
+        distSq = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+        radSumSq = (r1 + r2) * (r1 + r2);
+        if (distSq == radSumSq):
+            return 1
+        elif (distSq > radSumSq):
+            return -1
+        else:
+            return 0
 
 
     def Check_Color_Cmb(self,center,center_cmp):
@@ -182,7 +182,7 @@ class TL_States:
                         return True
                     else:
                         print("Mid is not yello")
-                        return Correct_Color_Comb          
+                        return Correct_Color_Comb
                 else:
                     print("A is Red B is NOT green")
                     return Correct_Color_Comb
@@ -196,7 +196,7 @@ class TL_States:
                             return True
                         else:
                             print("Mid is not yello")
-                            return Correct_Color_Comb        
+                            return Correct_Color_Comb
                     else:
                         print("B is Red A is green")
                         return Correct_Color_Comb
@@ -208,11 +208,11 @@ class TL_States:
 
         frame_draw_special= frame_draw.copy()
         self.Traffic_State,self.prevTraffic_State
-        # 2. Apply the HoughCircles to detect the circular regions in the Image        
+        # 2. Apply the HoughCircles to detect the circular regions in the Image
         NumOfVotesForCircle = 16 #parameter 1 MinVotes needed to be classified as circle
         CannyHighthresh = 230 # High threshold value for applying canny
         mindDistanBtwnCircles = 5 # kept as sign will likely not be overlapping
-        max_rad = 50 # smaller circles dont have enough votes so only maxRadius need to be controlled 
+        max_rad = 50 # smaller circles dont have enough votes so only maxRadius need to be controlled
                         # As signs are right besides road so they will eventually be in view so ignore circles larger than said limit
         circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT,1,mindDistanBtwnCircles,param1=CannyHighthresh,param2=NumOfVotesForCircle,minRadius=5,maxRadius=max_rad)
         TL_Update = "Unknown"
@@ -225,7 +225,7 @@ class TL_States:
                 center =(int(i[0])-1,int(i[1])-1)
                 radius = int(i[2] + 5)
                 if (radius !=5):
-                    self.detected_circle = self.detected_circle + 1 
+                    self.detected_circle = self.detected_circle + 1
                     j_count=0
                     for j in circles[0,:]:
                         if j_count!=i_count:
@@ -272,8 +272,8 @@ class TL_States:
                                             self.Traffic_State="Stop"
                                     else:
                                         if (self.prevTraffic_State != "Stop"):
-                                            self.Traffic_State= "Unknown"#Because No Traffic light is detected and we werent looking for Go then Reset Traffic State        
-                                    
+                                            self.Traffic_State= "Unknown"#Because No Traffic light is detected and we werent looking for Go then Reset Traffic State
+
                                     print("HLS[center[1],center[0],1] = ",self.HLS[center[1],center[0],1], "HLS[center_cmp[1],center_cmp[0],1] = ",self.HLS[center_cmp[1],center_cmp[0],1])
 
                             j_count=j_count+1
@@ -293,18 +293,18 @@ class TL_States:
                             cv2.circle(frame_draw,(i[0],i[1]),2,(0,0,255),3)
                             #cv2.imshow('circle',detected_sign)
 
-            if (config.debugging and config.debugging_TrafficLights):            
+            if (config.debugging and config.debugging_TrafficLights):
                 detected_circles_str= "#_of_detected_circles = "+ str(circles.shape[1])
                 cv2.putText(frame_draw,detected_circles_str,(20,100),cv2.FONT_HERSHEY_SIMPLEX,0.45,(255,255,255))
-            
+
             if self.display_images:
-                
+
                 if (config.debugging and config.debugging_TrafficLights):
                     Traffic_State_STR= "Traffic State = "+ self.Traffic_State
                     cv2.putText(frame_draw, Traffic_State_STR, (20,120), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255,255,255))
                     cimg_str = '[Fetch_TL_State] (2) detected circular reg'
                     cv2.imshow(cimg_str,frame_draw)
-  
+
 
             if (self.Traffic_State !=self.prevTraffic_State):
                 print("#################TRAFFIC STATE CHANGED####################")
@@ -319,12 +319,12 @@ class TL_States:
 
 
     def clr_segment(self,lower_range,upper_range):
-        
+
         # 2. Performing Color Segmentation on Given Range
         lower = np.array( [lower_range[0],lower_range[1] ,lower_range[2]] )
         upper = np.array( [upper_range[0]    ,255     ,255])
         mask = cv2.inRange(self.HLS, lower, upper)
-        
+
         # 3. Dilating Segmented ROI's
         kernel = cv2.getStructuringElement(shape=cv2.MORPH_ELLIPSE, ksize=(3,3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel)
@@ -375,7 +375,7 @@ class TL_States:
 
 
     def Get_TL_State(self,frame,frame_draw):
-        
+
         if (config.debugging and config.debugging_TrafficLights and config.debugging_TL_Config):
             cv2.namedWindow("[TL_Config] mask")
             cv2.namedWindow("[TL_Config] mask_R")
@@ -399,7 +399,7 @@ class TL_States:
 
         # 1. Cvt frame_ROI to grayscale
         gray = cv2.cvtColor(frame_ROI,cv2.COLOR_BGR2GRAY)
-        # Localizing Potetial Candidates and Classifying them in SignDetection    
+        # Localizing Potetial Candidates and Classifying them in SignDetection
         self.Circledetector(gray.copy(),frame.copy(),frame_draw)
 
         return self.Traffic_State
@@ -413,13 +413,14 @@ class Cascade_Detector:
         print("Initialized Object of Cascade_Detector class")
 
     # Class Variables
+    print("\n\n\n ",os.getcwd() ,"\n\n\n")
     TrafficLight_cascade_str = os.path.join(os.getcwd(), "self_driving_car_pkg/self_driving_car_pkg/data/TrafficLight_cascade.xml")
     TrafficLight_cascade = cv2.CascadeClassifier()
     #-- 1. Load the cascades
     if not TrafficLight_cascade.load(cv2.samples.findFile(TrafficLight_cascade_str)):
         print('--(!)Error loading face cascade')
         exit(0)
-    
+
 
     def detect(self,img):
         """ Uses haar cascade (object detector) to detect traffic light and return its bbox and state
@@ -453,7 +454,7 @@ class Cascade_Detector:
             Traffic_State = TL_States_.Get_TL_State(img_ROI,img_draw)
             if(Traffic_State!="Unknown"):
                 print("Traffic State Recived at",TL_iteration," pos = ",Traffic_State)
-                # Confirm Traffic Light 
+                # Confirm Traffic Light
                 cv2.rectangle(img_draw, (x,y), (x+w,y+h), (0,255,0), 2)
                 # Start Tracking
                 TrafficLightFound = True
@@ -467,7 +468,7 @@ class Cascade_Detector:
         #cv2.imshow('detected_TrafficLight', img_draw)
         #cv2.waitKey(1)
 
-        
+
         if TrafficLightFound:
             TrafficLight_Rect = target[TL_iteration]
         else:
@@ -485,7 +486,7 @@ class TL_Tracker:
     mode = "Detection"
     max_allowed_dist = 100
     feature_params = dict(maxCorners=100,qualityLevel=0.3,minDistance=7,blockSize=7)
-    lk_params = dict(winSize=(15, 15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03))  
+    lk_params = dict(winSize=(15, 15),maxLevel=2,criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,10, 0.03))
     # Create some random colors
     color = np.random.randint(0, 255, (100, 3))
     known_centers = []
@@ -512,7 +513,7 @@ class TL_Tracker:
         # If no match found as of yet return default values
         return match_found, match_idx
     def santitze_pts(self,pts_src,pts_dst):
-        # Idea was to Order on Descending Order of Strongest Points [Strength here is 
+        # Idea was to Order on Descending Order of Strongest Points [Strength here is
         # considered when two points have minimum distance between each other]
         pt_idx = 0
         dist_list = []
@@ -532,7 +533,7 @@ class TL_Tracker:
 
         return pts_src,pts_dst
 
-    
+
     def EstimateTrackedRect(self,im_src,pts_src,pts_dst,img_draw):
         Tracking = "Tracking"
         im_dst = np.zeros_like(im_src)
@@ -544,22 +545,22 @@ class TL_Tracker:
 
             M = cv2.getAffineTransform(pts_src, pts_dst)
             im_dst = cv2.warpAffine(im_src, M ,(im_dst.shape[1],im_dst.shape[0]),flags=cv2.INTER_CUBIC)
-            
+
             img_dst_2 = np.zeros_like(im_dst)
 
             kernel = np.ones((2,2), dtype=np.uint8)
             closing = cv2.morphologyEx(im_dst, cv2.MORPH_CLOSE, kernel)
-            
+
             cnts = cv2.findContours(closing, cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_NONE )[1]
             cnt = max(cnts, key=cv2.contourArea)
             x,y,w,h = cv2.boundingRect(cnt)
 
-            # [NEW]: Identifying (Prius < = Proximity = > Traffic Light) 
+            # [NEW]: Identifying (Prius < = Proximity = > Traffic Light)
             #        [ based on its location on left or right extrema  of image. ]
             if ( (              (x+w)             < (0.5*im_src.shape[1]) ) or
                  ( abs( (x+w) - im_src.shape[1] ) < (0.3*im_src.shape[1]) )    ):
                 self.CollisionIminent = True
-                
+
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
@@ -581,7 +582,7 @@ class TL_Tracker:
             # Set Img_dst_2 to Already saved Tracked Roi One last Time
             img_dst_2 = self.Tracked_ROI
             self.CollisionIminent = False # Reset
-        
+
         return im_dst,img_dst_2,Tracking
 
     def Track(self,frame,frame_draw):
@@ -597,14 +598,14 @@ class TL_Tracker:
         # Localizing Potetial Candidates and Classifying them in SignDetection
         # 4b. Calculate optical flow
         p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray, gray, self.p0, None,**self.lk_params)
-        
+
         # 4c. If no flow, look for new points
         if p1 is None:
             self.mode = "Detection"
             self.mask = np.zeros_like(frame_draw)
             self.Reset()
 
-        # 4d. If points tracked, Display and Update SignTrack class    
+        # 4d. If points tracked, Display and Update SignTrack class
         else:
             # Select good points
             good_new = p1[st == 1]
@@ -617,14 +618,14 @@ class TL_Tracker:
                 self.mask = cv2.line(self.mask, (a, b), (c, d), self.color[i].tolist(), 2)
                 frame_draw = cv2.circle(frame_draw, (a, b), 5, self.color[i].tolist(), -1)
             frame_draw_ = frame_draw + self.mask# Display the image with the flow lines
-            np.copyto(frame_draw,frame_draw_)#important to copy the data to same address as frame_draw   
+            np.copyto(frame_draw,frame_draw_)#important to copy the data to same address as frame_draw
             self.old_gray = gray.copy()
             self.p0 = good_new.reshape(-1, 1, 2)
         #cv2.imshow("frame_draw",frame_draw)
         return Temp_Tracked_ROI
 
     def Reset(self):
-        
+
         self.known_centers = []
         self.known_centers_confidence = []
         self.old_gray = 0
@@ -645,7 +646,7 @@ def detect_TrafficLights(img,frame_draw):
     Returns:
         (String): State of the Traffic Light (Red | Green | Unknown) [Unknown: No Traffic Light found!]
         (bool): SDC <== Close enough? ==> Traffic Light
-    """    
+    """
     Curr_TL_State = "Unknown"
     # 4. Checking if SignTrack Class mode is Tracking If yes Proceed
     if(TL_Track.mode == "Tracking"):
@@ -655,13 +656,13 @@ def detect_TrafficLights(img,frame_draw):
         #cv2.waitKey(0)
         Temp_Tracked_ROI = TL_Track.Track(img,frame_draw)
         #Temp_Tracked_ROI = TL_Track.Track(ClrRegRmvd,frame_draw)
-        
+
         if (config.debugging and config.debugging_TrafficLights):
             cv2.imshow("[Fetch_TL_State] (4) Tracked_ROI",TL_Track.Tracked_ROI)
 
         img_ROI_tracked = cv2.bitwise_and(img,img,mask=Temp_Tracked_ROI)
-        
-        if (config.debugging and config.debugging_TrafficLights):        
+
+        if (config.debugging and config.debugging_TrafficLights):
             cv2.imshow('[Fetch_TL_State] (5) img_ROI_tracked_BoundedRect', img_ROI_tracked)
 
         # Reconfirm if detected Traffic Light was the desired one
@@ -684,15 +685,15 @@ def detect_TrafficLights(img,frame_draw):
 
         # 3a. Select the ROI which u want to track
         r, TLD_Class = cascade_detector.detect(img)
-        
+
         if ((r!=np.array([0,0,0,0])).all()):
-            # Traffic Light Detected ===> Initialize Tracker 
+            # Traffic Light Detected ===> Initialize Tracker
             # 3b. Convert Rgb to gray
             gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
             # 3c. creating ROI mask
             ROI_toTrack = np.zeros_like(gray)
             ROI_toTrack[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])] = 255
-            
+
             #ROI_mask = np.zeros_like(gray)
             #cv2.rectangle(ROI_mask, (int(r[0]),int(r[1])), (int(r[0]+r[2]),int(r[1]+r[3])),255, 2)
 
@@ -712,15 +713,15 @@ def detect_TrafficLights(img,frame_draw):
 
     if not (config.debugging and config.debugging_TrafficLights):
         cv2.destroyWindow('[Fetch_TL_State] (1) img_ROI')
-        cv2.destroyWindow('[Fetch_TL_State] (2) detected circular reg')  
+        cv2.destroyWindow('[Fetch_TL_State] (2) detected circular reg')
         cv2.destroyWindow('[Fetch_TL_State] (3) Traffic Light With State')
         cv2.destroyWindow("[Fetch_TL_State] (4) Tracked_ROI")
         cv2.destroyWindow('[Fetch_TL_State] (5) img_ROI_tracked_BoundedRect')
-    
+
     if not (config.debugging and config.debugging_TrafficLights and config.debugging_TL_Config):
         cv2.destroyWindow('Traffic Light Confirmed!! [Checking State!!!]')
-        cv2.destroyWindow("[TL_Config] mask")    
-        cv2.destroyWindow("[TL_Config] mask_R")    
+        cv2.destroyWindow("[TL_Config] mask")
+        cv2.destroyWindow("[TL_Config] mask_R")
 
 
     return Curr_TL_State,TL_Track.CollisionIminent
