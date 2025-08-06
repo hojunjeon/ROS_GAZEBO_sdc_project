@@ -2,99 +2,80 @@
 <sdf version="1.6">
   <world name="crosswalk_test_world">
 
-    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-      <ros>
-        <namespace>/</namespace>
-      </ros>
-      <update_rate>10.0</update_rate>
-    </plugin>
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://asphalt_plane</uri><pose>0 40 0 0 0 0</pose></include>
 
-    <!-- 조명 -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
-
-    <!-- 평면 도로 (asphalt_plane) -->
-    <include>
-      <uri>model://asphalt_plane</uri>
-      <name>road</name>
-      <pose>0 40 0 0 0 0</pose>
-    </include>
-
-    <!-- 횡단보도 3개 -->
-    <include>
-      <uri>model://crosswalk</uri>
-      <name>crosswalk_1</name>
-      <pose>0 20 0.1 0 0 0</pose>
-    </include>
-
-    <include>
-      <uri>model://crosswalk</uri>
-      <name>crosswalk_2</name>
-      <pose>0 40 0.1 0 0 0</pose>
-    </include>
-
-    <include>
-      <uri>model://crosswalk</uri>
-      <name>crosswalk_3</name>
-      <pose>0 70 0.1 0 0 0</pose>
-    </include>
+    <!-- 횡단보도 동일 -->
+    <include><uri>model://crosswalk</uri><name>crosswalk_1</name><pose>0 20 0.1 0 0 0</pose></include>
+    <include><uri>model://crosswalk</uri><name>crosswalk_2</name><pose>0 40 0.1 0 0 0</pose></include>
+    <include><uri>model://crosswalk</uri><name>crosswalk_3</name><pose>0 70 0.1 0 0 0</pose></include>
 
     <!-- 자동차 -->
-    <include>
-      <uri>model://prius_hybrid</uri>
-      <name>car</name>
-      <pose>0 0 0.1 0 0 3.141592</pose>
-    </include>
+    <include><uri>model://prius_hybrid</uri><name>car</name><pose>0 0 0.1 0 0 3.141592</pose></include>
 
-    <!-- 보행자 3명 (각각 cmd_vel 플러그인 포함) -->
-    <include>
-      <uri>model://pedestrian</uri>
-      <name>pedestrian_1</name>
+    <!-- 보행자 actor 3명, scripted trajectory로 -5→+5 왕복 -->
+    <!-- I번 보행자 -->
+    <actor name="pedestrian_1">
       <pose>-5 20 0.1 0 0 0</pose>
-      <plugin name="cmd_vel_plugin_pedestrian_1" filename="libgazebo_ros_velocity_controller.so">
-        <ros>
-          <namespace>pedestrian_1</namespace>
-          <remapping>cmd_vel:=cmd_vel</remapping>
-        </ros>
-        <command_topic>cmd_vel</command_topic>
-        <odometry_topic>odom</odometry_topic>
-        <odometry_frame>odom</odometry_frame>
-        <robot_base_frame>link</robot_base_frame>
-      </plugin>
-    </include>
+      <skin>
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walk">
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>0.0</delay_start>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walk" tension="0">
+          <waypoint><time>0</time><pose>-5 20 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>5</time><pose>5 20 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>7</time><pose>5 20 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>15</time><pose>5 20 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>20</time><pose>-5 20 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>22</time><pose>-5 20 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>30</time><pose>-5 20 0.1 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
 
-    <include>
-      <uri>model://pedestrian</uri>
-      <name>pedestrian_2</name>
+    <!-- pedestrian_2, _3: y 각각 40,70 -->
+    <actor name="pedestrian_2">
       <pose>-5 40 0.1 0 0 0</pose>
-      <plugin name="cmd_vel_plugin_pedestrian_2" filename="libgazebo_ros_velocity_controller.so">
-        <ros>
-          <namespace>pedestrian_2</namespace>
-          <remapping>cmd_vel:=cmd_vel</remapping>
-        </ros>
-        <command_topic>cmd_vel</command_topic>
-        <odometry_topic>odom</odometry_topic>
-        <odometry_frame>odom</odometry_frame>
-        <robot_base_frame>link</robot_base_frame>
-      </plugin>
-    </include>
+      <skin><filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename><scale>1.0</scale></skin>
+      <animation name="walk"><filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename><interpolate_x>true</interpolate_x></animation>
+      <script><loop>true</loop><delay_start>0.0</delay_start><auto_start>true</auto_start>
+        <trajectory id="0" type="walk" tension="0">
+          <waypoint><time>0</time><pose>-5 40 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>5</time><pose>5 40 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>7</time><pose>5 40 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>15</time><pose>5 40 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>20</time><pose>-5 40 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>22</time><pose>-5 40 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>30</time><pose>-5 40 0.1 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
 
-    <include>
-      <uri>model://pedestrian</uri>
-      <name>pedestrian_3</name>
+    <actor name="pedestrian_3">
       <pose>-5 70 0.1 0 0 0</pose>
-      <plugin name="cmd_vel_plugin_pedestrian_3" filename="libgazebo_ros_velocity_controller.so">
-        <ros>
-          <namespace>pedestrian_3</namespace>
-          <remapping>cmd_vel:=cmd_vel</remapping>
-        </ros>
-        <command_topic>cmd_vel</command_topic>
-        <odometry_topic>odom</odometry_topic>
-        <odometry_frame>odom</odometry_frame>
-        <robot_base_frame>link</robot_base_frame>
-      </plugin>
-    </include>
+      <skin><filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename><scale>1.0</scale></skin>
+      <animation name="walk"><filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename><interpolate_x>true</interpolate_x></animation>
+      <script><loop>true</loop><delay_start>0.0</delay_start><auto_start>true</auto_start>
+        <trajectory id="0" type="walk" tension="0">
+          <waypoint><time>0</time><pose>-5 70 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>5</time><pose>5 70 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>7</time><pose>5 70 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>15</time><pose>5 70 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>20</time><pose>-5 70 0.1 0 0 3.1415</pose></waypoint>
+          <waypoint><time>22</time><pose>-5 70 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>30</time><pose>-5 70 0.1 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
 
   </world>
 </sdf>
