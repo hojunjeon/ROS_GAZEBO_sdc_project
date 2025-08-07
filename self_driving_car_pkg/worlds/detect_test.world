@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="crosswalk_test_world">
+
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://asphalt_plane</uri><pose>0 40 0 0 0 0</pose></include>
+
+    <!-- 횡단보도 동일 -->
+    <include><uri>model://crosswalk</uri><name>crosswalk_1</name><pose>0 20 0.1 0 0 0</pose></include>
+    <include><uri>model://crosswalk</uri><name>crosswalk_2</name><pose>0 40 0.1 0 0 0</pose></include>
+    <include><uri>model://crosswalk</uri><name>crosswalk_3</name><pose>0 70 0.1 0 0 0</pose></include>
+
+    <!-- 자동차 -->
+    <include><uri>model://prius_hybrid</uri><name>car</name><pose>0 0 0.1 0 0 3.141592</pose></include>
+
+    <!-- 보행자 actor 3명, scripted trajectory로 -5→+5 왕복 -->
+    <!-- I번 보행자 -->
+    <actor name="pedestrian_1">
+      <pose>-5 20 0.1 0 0 0</pose>
+      <skin>
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walk">
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>0.0</delay_start>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walk" tension="0">
+          <waypoint><time>0</time><pose>0 20 0.1 0 0 0</pose></waypoint>
+          <waypoint><time>5</time><pose>0 20 0.1 0 0 0</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+  </world>
+</sdf>

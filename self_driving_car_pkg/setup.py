@@ -52,7 +52,6 @@ setup(
         'upper_camera_recording = self_driving_car_pkg.upper_camera_video:main',
         'sdc_V2 = self_driving_car_pkg.sdc_V2:main',
         'car_controller_node = self_driving_car_pkg.car_controller_node:main',
-        'pedestrian_controller_node = self_driving_car_pkg.pedestrian_controller_node:main',
         ],
     },
 )
