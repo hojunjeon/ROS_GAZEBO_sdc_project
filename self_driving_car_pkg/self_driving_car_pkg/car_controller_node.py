@@ -1,3 +1,4 @@
+#car_controller_node.py
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -26,7 +27,7 @@ class CarController(Node):
         self.timer = self.create_timer(0.1, self.control_loop)
 
         # Crosswalk positions
-        self.crosswalk_positions = [20.0, 40.0, 70.0]
+        self.crosswalk_positions = [40.0]
 
     def odom_callback(self, msg):
         self.current_y = msg.pose.pose.position.y
@@ -34,7 +35,7 @@ class CarController(Node):
     def image_callback(self, msg):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            self.pedestrian_detected = self.detector.detect(cv_image)
+            self.pedestrian_detected = self.detector.detect(cv_image, visualize=True)
         except Exception as e:
             self.get_logger().error(f"Image conversion failed: {e}")
 
@@ -52,19 +53,19 @@ class CarController(Node):
             nearest_crosswalk = self.get_nearest_crosswalk()
 
             if nearest_crosswalk is not None:
-                stop_line = nearest_crosswalk - 10.0
+                stop_line = nearest_crosswalk - 6.0
 
                 # 자동차 절대 좌표가 정지선보다 작으면 직진
                 if self.current_y < stop_line:
-                    twist_msg.linear.x = 1.0
+                    twist_msg.linear.x = 2.0
                     self.get_logger().info(f"보행자 인식됨. 현재 위치 {self.current_y:.2f} < 정지선 {stop_line:.2f}, 계속 직진")
                 else:
                     twist_msg.linear.x = 0.0
                     self.get_logger().info(f"보행자 인식됨. 현재 위치 {self.current_y:.2f} >= 정지선 {stop_line:.2f}, 정지")
             else:
-                twist_msg.linear.x = 1.0  # 더 이상 횡단보도 없음 -> 직진 유지
+                twist_msg.linear.x = 2.0  # 더 이상 횡단보도 없음 -> 직진 유지
         else:
-            twist_msg.linear.x = 1.0
+            twist_msg.linear.x = 2.0
             self.get_logger().info("보행자 인식 안됨. 직진 유지")
 
         self.cmd_vel_pub.publish(twist_msg)
