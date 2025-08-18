@@ -1,24 +1,40 @@
+
 import cv2
+from std_msgs.msg import Float32
 from geometry_msgs.msg import Twist
-from rclpy.node import Node 
-from cv_bridge import CvBridge 
-from sensor_msgs.msg import Image 
-import rclpy 
+from rclpy.node import Node
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image, LaserScan
+import rclpy
+import numpy as np
 
 from .Drive_Bot import Car, Debugging
 
+
 class Video_feed_in(Node):
     def __init__(self):
-
         super().__init__('video_subscriber')
-        self.subscriber = self.create_subscription(Image,'/prius_hybrid_sensor/camera/image_raw',self.process_data,10)
-        self.publisher = self.create_publisher(Twist, '/prius_hybrid_sensor/cmd_vel', 40)
-        timer_period = 0.5;self.timer = self.create_timer(timer_period, self.send_cmd_vel)
+        self.subscriber = self.create_subscription(Image, '/prius_hybrid_sensor/camera/image_raw', self.process_data, 10)
+        # LIDAR 콜백 제거, 대신 front_vehicle_distance 구독
+        self.distance_sub = self.create_subscription(
+            Float32, '/front_vehicle_distance', self.front_vehicle_distance_callback, 10)
+        self.publisher = self.create_publisher(Twist, '/prius_hybrid_sensor/cmd_vel', 20)
+        timer_period = 0.5
+        self.timer = self.create_timer(timer_period, self.send_cmd_vel)
 
         self.velocity = Twist()
-        self.bridge   = CvBridge() # converting ros images to opencv data
-        self.Debug    = Debugging()
-        self.Car      = Car()
+        self.bridge = CvBridge()  # converting ros images to opencv data
+        self.Debug = Debugging()
+        self.Car = Car()
+
+
+    def front_vehicle_distance_callback(self, msg):
+        # front_vehicle_detector 노드에서 publish한 거리값을 받아 Car에 전달
+        if msg.data < 0:
+            front_distance = None
+        else:
+            front_distance = msg.data
+        self.Car.set_front_distance(front_distance)
 
     def send_cmd_vel(self):
         self.publisher.publish(self.velocity)

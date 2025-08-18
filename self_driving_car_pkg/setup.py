@@ -33,7 +33,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name,'launch'), glob('launch/*')),
+        (os.path.join('share', package_name,'launch'), glob('launch/*.py')),
         (os.path.join('lib', package_name), glob('scripts/*')),
         (os.path.join('share', package_name,'worlds'), glob('worlds/*')),
             ],
@@ -51,6 +51,9 @@ setup(
         'video_recording_node = self_driving_car_pkg.video_save:main',
         'upper_camera_recording = self_driving_car_pkg.upper_camera_video:main',
         'sdc_V2 = self_driving_car_pkg.sdc_V2:main',
+        'lead_car_node = self_driving_car_pkg.lead_car_node:main',
+        'maintain_distance_node = self_driving_car_pkg.maintain_distance_node:main',
+        'front_vehicle_detector = self_driving_car_pkg.front_vehicle_detector:main',
         ],
     },
 )

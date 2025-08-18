@@ -144,6 +144,7 @@ class Debugging:
             self.Lan_Created = False
             cv2.destroyWindow('CONFIG_LANE')        
 
+
 class Control:
 
     def __init__(self):
@@ -151,7 +152,7 @@ class Control:
 
 
         self.prev_Mode_LT = "Detection"
-        self.car_speed = 80
+        self.car_speed = 150
         self.angle_of_car = 0
 
         self.Left_turn_iterations = 0
@@ -173,11 +174,11 @@ class Control:
 
         if((Tracked_class!=0) and (self.prev_Mode == "Tracking") and (Mode == "Detection")):
             if  (Tracked_class =="speed_sign_30"):
-                self.car_speed = 30
-            elif(Tracked_class =="speed_sign_60"):
-                self.car_speed = 60
-            elif(Tracked_class =="speed_sign_90"):
                 self.car_speed = 90
+            elif(Tracked_class =="speed_sign_60"):
+                self.car_speed = 180
+            elif(Tracked_class =="speed_sign_90"):
+                self.car_speed = 270
             elif(Tracked_class =="stop"):
                 self.car_speed = 0
             
@@ -233,7 +234,7 @@ class Control:
         
         if (Tracked_class == "left_turn"):
             
-            Speed = 50
+            Speed = 60
 
             if ( (self.prev_Mode_LT =="Detection") and (Mode=="Tracking")):
                 self.prev_Mode_LT = "Tracking"
@@ -284,6 +285,8 @@ class Control:
         return a,b
 
 
+
+
     def drive_car(self,Current_State,Inc_TL,Inc_LT):
         """Act on extracted information based on the SDC control mechanism
 
@@ -327,15 +330,28 @@ class Control:
 
         return self.angle_of_car,current_speed, Detected_LeftTurn, Activat_LeftTurn 
 
+
 class Car:
-    def __init__( self,Inc_TL = True, Inc_LT = True ):
-        
+
+    def __init__(self, Inc_TL=True, Inc_LT=True):
         self.Control_ = Control()
         self.Inc_TL = Inc_TL
         self.Inc_LT = Inc_LT
-        # [NEW]: Containers to Keep track of current state of Signs and Traffic Light detection
         self.Tracked_class = "Unknown"
         self.Traffic_State = "Unknown"
+        # 외부에서 차간거리만 받아 저장 (front_vehicle_detector 연동)
+        self.front_distance = None
+        self.target_distance = 10.0
+        self.min_speed = 30.0
+        self.max_speed = 90.0
+        self.k_p = 5.0
+        # lead_car 속도 추종 관련 변수 초기화
+        self.last_lead_speed = None
+        self.lead_speed_buffer = []
+        self.lead_speed_buffer_time = None
+
+    def set_front_distance(self, distance):
+        self.front_distance = distance
 
     def display_state(self,frame_disp,angle_of_car,current_speed,Tracked_class,Traffic_State,Detected_LeftTurn, Activat_LeftTurn):
     
@@ -351,7 +367,9 @@ class Car:
             direction_string="[ Straight ]"
             color_direction=(0,255,0)
 
-        if(current_speed>0):
+        current_speed = 0 if current_speed is None else current_speed
+
+        if(current_speed>0 ):
             direction_string = "Moving --> "+ direction_string
         else:
             color_direction=(0,0,255)
@@ -374,23 +392,12 @@ class Car:
             font_Scale = 0.37
         cv2.putText(frame_disp,"Sign Detected ==> "+str(Tracked_class),(20,80),cv2.FONT_HERSHEY_COMPLEX,font_Scale,(0,255,255),1)
 
-    def driveCar(self,frame):
+    def driveCar(self, frame, debug_print=True):
+        Detected_LeftTurn = False
+        Activat_LeftTurn = False
 
-        """ Runs the complete Self Drive Mechanism in two sequential steps:
-            1) Detection : Extract all the required information from the surrounding using the sensor (camera)
-            2) Control   : Act on the extracted information based on the features the SDC is capable of.
-
-        Args:
-            frame (numpy nd array): Prius front-cam view
-        Returns:
-            Angle (float): required steering angle given the conditions 
-            Speed (float): required cruise speed given the conditions 
-            img   (numpy_nd_array): displays the self drive under-the-hood working by overlaying   
-        """        
-        
         img = frame[0:640,238:1042]
         img = cv2.resize(img,(320,240))
-
         img_orig = img.copy()
 
         distance, Curvature = detect_Lane(img)
@@ -405,19 +412,90 @@ class Car:
 
         Current_State = [distance, Curvature, img, Mode, Tracked_class, Traffic_State, CloseProximity]
 
-        Angle,Speed, Detected_LeftTurn, Activat_LeftTurn  = self.Control_.drive_car(Current_State,self.Inc_TL,self.Inc_LT)
-        
-        # [NEW]: Updating State Variable with current state 
+        # 1순위: 코너(조향각 5 이상)에서는 무조건 코너링(속도 60 고정)
+        Angle, _, _, _ = self.Control_.drive_car(Current_State, self.Inc_TL, self.Inc_LT)
+        if abs(Angle) >= 5:
+            Speed = 60.0
+            debug_msg = f"코너 감지 : 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+        # 2순위: 신호등 정지
+        elif Traffic_State == "Stop" and CloseProximity:
+            Angle = 0.0
+            Speed = 0.0
+            self.lost_distance_count = 0
+            debug_msg = f"신호등 인식 : 빨간불 / 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+        # 3순위: 좌회전 표지판
+        elif Tracked_class == "left_turn":
+            Angle, Speed, _, _ = self.Control_.Obey_LeftTurn(0, 0, Mode, Tracked_class)
+            self.lost_distance_count = 0
+            debug_msg = f"표지판 인식 : LeftTurn / 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+        # 4순위: 차간거리 유지 (front_distance가 있을 때, lead_car 속도 추종)
+        elif self.front_distance is not None:
+            import time
+            now = time.time()
+            if self.front_distance < 0:
+                Speed = 60.0
+                self.last_lead_speed = None
+                self.prev_front_distance = None
+                self.prev_time = None
+            elif self.front_distance <= self.target_distance - 2:
+                Speed = 0.0
+                self.last_lead_speed = None
+                self.prev_front_distance = None
+                self.prev_time = None
+            else:
+                # 출발 직후에는 60으로 시작
+                if not hasattr(self, 'prev_front_distance') or self.prev_front_distance is None:
+                    Speed = 60.0
+                    self.prev_front_distance = self.front_distance
+                    self.prev_time = now
+                else:
+                    dt = now - self.prev_time if hasattr(self, 'prev_time') and self.prev_time is not None else 0.1
+                    if dt < 0.05:
+                        dt = 0.1
+                    delta = self.front_distance - self.prev_front_distance
+                    # 거리 변화에 따라 속도 추정
+                    if delta > 0.1:
+                        Speed = 90.0  # 멀어지면(lead_car가 빠름)
+                    else:
+                        Speed = 60.0  # 변화 없으면 60 유지
+                    self.prev_front_distance = self.front_distance
+                    self.prev_time = now
+            debug_msg = (
+                f"전방 차량 감지 : 차간 거리 = {self.front_distance:.2f} / 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+                if self.front_distance is not None and Speed is not None and Angle is not None
+                else f"전방 차량 감지 : 차간 거리 = {self.front_distance or 'N/A'} / 속도 = {Speed or 'N/A'} / 조향각 = {Angle or 'N/A'}"
+            )
+        # 6순위: 표지판 속도 등 기타 이벤트는 기존 로직
+        else:
+            Angle, Speed, Detected_LeftTurn, Activat_LeftTurn = self.Control_.drive_car(Current_State, self.Inc_TL, self.Inc_LT)
+            # 속도제한 표지판
+            if Tracked_class in ["speed_sign_30", "speed_sign_60", "speed_sign_90"]:
+                limit = Tracked_class.split('_')[-1]
+                debug_msg = f"표지판 인식 : 속도제한 = {limit} / 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+            # 신호등 초록불
+            elif Traffic_State == "Go":
+                debug_msg = f"신호등 인식 : 초록불 / 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+            # 기본 차선 인식 주행
+            else:
+                debug_msg = f"차선 인식 주행 : 속도 = {Speed:.2f} / 조향각 = {Angle:.2f}"
+
+        if debug_print:
+            print(debug_msg)
+
         self.Tracked_class = Tracked_class
         self.Traffic_State = Traffic_State
 
-        self.display_state(img,Angle,Speed,Tracked_class,Traffic_State, Detected_LeftTurn, Activat_LeftTurn)
+        self.display_state(img, Angle, Speed, Tracked_class, Traffic_State, Detected_LeftTurn, Activat_LeftTurn)
 
-        # [NEW]: Interpolate increased car steering range to increased motor turning angle
-        # Translate [ Real World angle and speed ===>> ROS Car Control Range ]
-        Angle=interp(Angle,[-60,60],[0.8,-0.8])
-        if (Speed!=0):
-            Speed=interp(Speed,[30,90],[1,2])
+        Angle = interp(Angle, [-60, 60], [0.8, -0.8])
+        if Speed != 0:
+            Speed = interp(Speed, [30, 90], [1, 3])
+
+        if abs(Angle) < 0.03:
+            Angle = 0.0
+        elif abs(Angle) < 0.1:
+            Angle *= 0.5
+
 
         Speed = float(Speed)
 
