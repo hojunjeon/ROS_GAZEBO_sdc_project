@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
 
-  <model name="Green_light">
+  <model name="green_light">
     <static>true</static>
 
       <link name='Green_light_source'>
@@ -50,7 +50,8 @@
       
       <light>
         <id>Green_light_source/green</id>
-        <duration>10</duration>
+        
+        <duration>5</duration>
         <interval>10</interval>
         <enable>true</enable>
       </light>

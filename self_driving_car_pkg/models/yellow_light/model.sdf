@@ -50,8 +50,9 @@
       
       <light>
         <id>Yellow_light_source/yellow</id>
+        
         <duration>2</duration>
-        <interval>8</interval>
+        <interval>13</interval>
         <enable>true</enable>
       </light>
       

@@ -1277,16 +1277,7 @@
           <wrench>0.012523 0.00494 -9.8004 0 -0 0</wrench>
         </link>
       </model>
-      <model name='green_Light'>
-        <pose>0 0 -0 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='Green_light_source'>
-          <pose>-0.62 0 2.4 1.57 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
+      
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -1413,16 +1404,7 @@
           <wrench>-0.000172 -0.000114 -0.000269 0 -0 0</wrench>
         </link>
       </model>
-      <model name='red_light'>
-        <pose>0 0 -0 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='Red_light_source'>
-          <pose>-1.66 0 2.4 1.57 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
+      
       <model name='track'>
         <pose>-10.5254 3.38506 0.025341 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -1449,16 +1431,7 @@
           <wrench>0 0 -9.8 0 -0 0</wrench>
         </link>
       </model>
-      <model name='yellow_light'>
-        <pose>0 0 -0 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='Yellow_light_source'>
-          <pose>-1.15 0 2.4 1.57 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
+      
       <light name='sun'>
         <pose>0 0 10 0 -0 0</pose>
       </light>
@@ -1470,162 +1443,8 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <model name='red_light'>
-      <static>1</static>
-      <link name='Red_light_source'>
-        <pose>-1.66 0 2.4 1.57 -0 0</pose>
-        <light name='red' type='spot'>
-          <pose>0 0 0 1.57 -0 0</pose>
-          <attenuation>
-            <range>30</range>
-            <linear>0.05</linear>
-          </attenuation>
-          <diffuse>0.5 1 1 1</diffuse>
-          <specular>1 1 1 1</specular>
-          <spot>
-            <inner_angle>0.3</inner_angle>
-            <outer_angle>0.35</outer_angle>
-            <falloff>1</falloff>
-          </spot>
-          <direction>0 0 -1</direction>
-        </light>
-        <visual name='red'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>0.1</length>
-            </cylinder>
-            <sphere>
-              <radius>0.4</radius>
-            </sphere>
-          </geometry>
-          <transparency>0.6</transparency>
-          <material>
-            <ambient>1 0 0 1</ambient>
-            <diffuse>1 0 0 1</diffuse>
-            <specular>1 1 1 1</specular>
-            <emissive>1 0 0 1</emissive>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <plugin name='red_light_controller' filename='libLedPlugin.so'>
-        <enable>1</enable>
-        <light>
-          <id>Red_light_source/red</id>
-          <duration>10</duration>
-          <interval>10</interval>
-          <enable>1</enable>
-        </light>
-      </plugin>
-      <pose>0 0 0 0 -0 0</pose>
-    </model>
-    <model name='yellow_light'>
-      <static>1</static>
-      <link name='Yellow_light_source'>
-        <pose>-1.15 0 2.4 1.57 -0 0</pose>
-        <light name='yellow' type='spot'>
-          <pose>0 0 0 1.57 -0 0</pose>
-          <attenuation>
-            <range>30</range>
-            <linear>0.05</linear>
-          </attenuation>
-          <diffuse>0.5 1 1 1</diffuse>
-          <specular>1 1 1 1</specular>
-          <spot>
-            <inner_angle>0.3</inner_angle>
-            <outer_angle>0.35</outer_angle>
-            <falloff>1</falloff>
-          </spot>
-          <direction>0 0 -1</direction>
-        </light>
-        <visual name='yellow'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>0.1</length>
-            </cylinder>
-            <sphere>
-              <radius>0.4</radius>
-            </sphere>
-          </geometry>
-          <transparency>0.6</transparency>
-          <material>
-            <ambient>1 1 0 1</ambient>
-            <diffuse>1 1 0 1</diffuse>
-            <specular>1 1 1 1</specular>
-            <emissive>1 1 0 1</emissive>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <plugin name='yellow_light_controller' filename='libLedPlugin.so'>
-        <enable>1</enable>
-        <light>
-          <id>Yellow_light_source/yellow</id>
-          <duration>2</duration>
-          <interval>8</interval>
-          <enable>1</enable>
-        </light>
-      </plugin>
-      <pose>0 0 0 0 -0 0</pose>
-    </model>
-    <model name='green_Light'>
-      <static>1</static>
-      <link name='Green_light_source'>
-        <pose>-0.62 0 2.4 1.57 -0 0</pose>
-        <light name='green' type='spot'>
-          <pose>0 0 0 1.57 -0 0</pose>
-          <attenuation>
-            <range>30</range>
-            <linear>0.05</linear>
-          </attenuation>
-          <diffuse>0.5 1 1 1</diffuse>
-          <specular>1 1 1 1</specular>
-          <spot>
-            <inner_angle>0.3</inner_angle>
-            <outer_angle>0.35</outer_angle>
-            <falloff>1</falloff>
-          </spot>
-          <direction>0 0 -1</direction>
-        </light>
-        <visual name='green'>
-          <geometry>
-            <cylinder>
-              <radius>0.25</radius>
-              <length>0.1</length>
-            </cylinder>
-            <sphere>
-              <radius>0.4</radius>
-            </sphere>
-          </geometry>
-          <transparency>0.6</transparency>
-          <material>
-            <ambient>0 1 0 1</ambient>
-            <diffuse>0 1 0 1</diffuse>
-            <specular>1 1 1 1</specular>
-            <emissive>0 1 0 1</emissive>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>0</kinematic>
-      </link>
-      <plugin name='green_light_controller' filename='libLedPlugin.so'>
-        <enable>1</enable>
-        <light>
-          <id>Green_light_source/green</id>
-          <duration>10</duration>
-          <interval>10</interval>
-          <enable>1</enable>
-        </light>
-      </plugin>
-      <pose>0 0 0 0 -0 0</pose>
-    </model>
+    
+  
     <model name='prius_hybrid_sensor'>
       <pose>-2.61803 -36.2261 0.03 0 -0 0</pose>
       <link name='chassis'>
