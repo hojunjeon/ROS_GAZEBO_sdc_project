@@ -51,7 +51,7 @@
       <light>
         <id>Green_light_source/green</id>
         
-        <duration>5</duration>
+        <duration>15</duration>
         <interval>10</interval>
         <enable>true</enable>
       </light>

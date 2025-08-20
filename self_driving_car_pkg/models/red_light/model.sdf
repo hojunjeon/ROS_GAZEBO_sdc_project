@@ -53,7 +53,7 @@
       <light>
         <id>Red_light_source/red</id>
         <duration>8</duration>
-        <interval>7</interval>
+        <interval>16</interval>
         <enable>true</enable>
       </light>
       

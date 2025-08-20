@@ -52,7 +52,7 @@
         <id>Yellow_light_source/yellow</id>
         
         <duration>2</duration>
-        <interval>13</interval>
+        <interval>22</interval>
         <enable>true</enable>
       </light>
       
