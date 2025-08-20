@@ -1,4 +1,4 @@
-
+#랜덤 시점 3초 정지 / 60,90 중 랜덤 속도로 등속직진
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import random
 import cv2
+from numpy import interp
 from .Drive_Bot import Car, Debugging
 
 class LaneAndSpeedPrius(Node):
@@ -19,53 +20,53 @@ class LaneAndSpeedPrius(Node):
         self.Debug = Debugging()
         self.velocity = Twist()
         # 속도 제어 상태
-        self.current_speed = 0.0
-        self.target_speed = 0.0
-        self.last_change_time = self.get_clock().now()
-        self.hold_time = 3.0
-        self.accel_time = 1.0
-        self.state = 'accel'
-        self.last_update_time = self.get_clock().now()
+        self.speed_choices = [60.0, 90.0]
+        self.current_speed = random.choice(self.speed_choices)
+        self.state = 'run'  # 'run' 또는 'stop'
+        self.last_state_change = self.get_clock().now()
+        self.stop_duration = 3.0  # 정차 시간(초)
+        self.next_stop_time = self.get_clock().now() + rclpy.duration.Duration(seconds=random.uniform(8, 20))
 
     def process_image(self, data):
         self.Debug.setDebugParameters()
         frame = self.bridge.imgmsg_to_cv2(data, 'bgr8')
-        angle, lane_speed, img = self.Car.driveCar(frame)
+        angle, lane_speed, img = self.Car.driveCar(frame, debug_print=False)
 
         now = self.get_clock().now()
-        dt = (now - self.last_update_time).nanoseconds / 1e9
-        self.last_update_time = now
-
-        # 직선/코너 판별 (조향각 임계값)
-        if abs(angle) < 0.1:
-            # 직선: 랜덤 속도 알고리즘 적용
-            if self.state == 'accel':
-                if abs(self.current_speed - self.target_speed) < 0.5:
-                    self.current_speed = self.target_speed
-                    self.state = 'hold'
-                    self.last_change_time = now
-                else:
-                    speed_diff = self.target_speed - self.current_speed
-                    step = speed_diff * min(dt / self.accel_time, 1.0)
-                    self.current_speed += step
-            elif self.state == 'hold':
-                if (now - self.last_change_time).nanoseconds / 1e9 >= self.hold_time:
-                    self.target_speed = random.uniform(1.0, 5.0)
-                    self.state = 'accel'
-                    self.last_change_time = now
-            # 최초 진입 시 타겟 속도 설정
-            if self.target_speed == 0.0:
-                self.target_speed = random.uniform(1.0, 5.0)
-            speed = self.current_speed
+        # 코너에서는 항상 30 유지
+        if abs(angle) >= 0.1:
+            speed = 30.0
+            self.current_speed = 30.0
+            self.state = 'run'
+            self.last_state_change = now
+            self.next_stop_time = now + rclpy.duration.Duration(seconds=random.uniform(8, 20))
         else:
-            # 코너: 차선 인식 속도 사용, 상태 초기화
-            speed = lane_speed
-            self.current_speed = lane_speed
-            self.target_speed = 0.0
-            self.state = 'accel'
+            # 직선 구간에서만 정차/주행 반복
+            if self.state == 'run':
+                if now >= self.next_stop_time:
+                    self.state = 'stop'
+                    self.current_speed = 0.0
+                    self.last_state_change = now
+                else:
+                    # 주행 중에는 고정된 속도 유지
+                    pass
+            elif self.state == 'stop':
+                if (now - self.last_state_change).nanoseconds / 1e9 >= self.stop_duration:
+                    self.state = 'run'
+                    # 정지 후 주행 재개 시 속도를 30, 60, 90 중 랜덤 선택
+                    self.current_speed = random.choice(self.speed_choices)
+                    self.last_state_change = now
+                    self.next_stop_time = now + rclpy.duration.Duration(seconds=random.uniform(8, 20))
+                else:
+                    self.current_speed = 0.0
+            speed = self.current_speed
 
+        print(f"[prius_hybrid] : 속도 = {speed:.2f} / 조향각 = {angle:.2f}")
+
+        if speed != 0:
+            speed = interp(speed, [20, 90], [1, 4])
         self.velocity.linear.x = speed
-        self.velocity.angular.z = angle
+        self.velocity.angular.z = angle        
         self.publisher.publish(self.velocity)
 
         # 디버깅용 시각화
